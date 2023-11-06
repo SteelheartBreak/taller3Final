@@ -35,7 +35,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.TilesOverlay
 
 
-class MapActivity : AppCompatActivity(), SensorEventListener {
+class MapActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMapBinding
     private val permisosUbicacionRequestCode = 123 // Identificador único para la solicitud de permisos
@@ -83,24 +83,12 @@ class MapActivity : AppCompatActivity(), SensorEventListener {
         setUpLogOutButton()
 
 
-        //Variables para sensor luz
-        sensorLightManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        lightSensor = sensorLightManager.getDefaultSensor(Sensor.TYPE_LIGHT)!!
-        lightEventListener = createLightSensorListener()
-
-        // variables para usar el barometro
-
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        barometerSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PRESSURE)
-
     }
 
     // metodo onPause
     override fun onPause() {
         super.onPause()
         locationClient.removeLocationUpdates(locationCallback)
-        sensorManager?.unregisterListener(this)
-        sensorLightManager.unregisterListener(lightEventListener)
         map.onPause()
     }
 
@@ -108,11 +96,6 @@ class MapActivity : AppCompatActivity(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         map.onResume()
-        sensorManager?.registerListener(this, barometerSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorLightManager.registerListener(
-            lightEventListener, lightSensor,
-            SensorManager.SENSOR_DELAY_NORMAL
-        )
     }
 
     // funcion para configurar todos listeners de los botones
@@ -246,32 +229,6 @@ class MapActivity : AppCompatActivity(), SensorEventListener {
         }
         setMarkerListeners()
     }
-
-    ////////////////////Barometro//////////////////
-    private var sensorManager: SensorManager?= null
-    private var barometerSensor: Sensor?= null
-    private var pressureTextView: TextView?= null
-    private var circularProgressBar: CircularProgressBar?= null
-
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if(event?.sensor?.type == Sensor.TYPE_PRESSURE){
-            val pressureValue = event.values[0]
-            pressureTextView!!.text = "Pressure: $pressureValue hPa"
-            val maxPressure = 1030f
-            circularProgressBar?.progress = (pressureValue / maxPressure)*1000
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-
-    }
-
-    ////////Sensor Luz//////////
-    // Variables de sensor
-    private lateinit var sensorLightManager: SensorManager
-    private lateinit var lightSensor: Sensor
-    private lateinit var lightEventListener: SensorEventListener
 
     fun createLightSensorListener(): SensorEventListener {
         val ret: SensorEventListener = object : SensorEventListener {

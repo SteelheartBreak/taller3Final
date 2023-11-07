@@ -4,7 +4,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.example.taller3.adapters.UsersAdapter
 import com.example.taller3.databinding.ActivityListUsersBinding
+import com.example.taller3.model.Usuario
 import com.google.firebase.storage.FirebaseStorage
 import com.parse.ParseQuery
 import com.parse.ParseUser
@@ -12,6 +14,9 @@ import com.parse.ParseUser
 
 class ListUsersActivity : AppCompatActivity() {
     val usernameList = mutableListOf<String>()
+    val objectID = mutableListOf<String>()
+    val fotos = mutableListOf<String>()
+    val usuarios = mutableListOf<Usuario>()
 
     private lateinit var binding: ActivityListUsersBinding
 
@@ -19,12 +24,11 @@ class ListUsersActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityListUsersBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
         updateUsers()
+        val adapter = UsersAdapter(this, usuarios)
 
-
-
+        // Asigna el adaptador a tu ListView
+        binding.listUsers.adapter = adapter
     }
 
 
@@ -53,20 +57,23 @@ class ListUsersActivity : AppCompatActivity() {
                 // Si no hay error, procesar la lista de usuarios
                 userObjects?.forEach { user ->
                     // Asumiendo que el campo para el nombre de usuario es 'username'
-                    user.objectId?.let { username ->
+                    user?.let { username ->
                         // Añadir el nombre de usuario a la lista si no es nulo
-                        usernameList.add(username)
+                        usernameList.add(user.username)
+                        objectID.add(user.objectId)
                     }
                 }
 
 
                 // Aquí puedes usar usernameList con los nombres de usuario
                 println("Lista de nombres de usuario con estado 'T': $usernameList")
+                println("Lista de ObjectsID con estado 'T': $objectID")
 
-                downloadUserImages(usernameList) { uris ->
+                downloadUserImages(objectID) { uris ->
                     // Aquí tienes tu lista de URIs
                     for (uri in uris) {
                         println("URI descargada: $uri")
+                        fotos.add(uri.toString())
                     }
                     // Puedes hacer algo con la lista de URIs aquí
                 }
@@ -75,11 +82,14 @@ class ListUsersActivity : AppCompatActivity() {
                 println("Error al buscar usuarios: " + e.localizedMessage)
             }
         }
+        var i = 0
+        while(i < usernameList.size){
+            usuarios.add(Usuario(usernameList[i], fotos[i], objectID[i]))
+            i += 1
+        }
     }
 
-
-
-    fun downloadUserImages(usernames: List<String>, completion: (List<Uri>) -> Unit) {
+    fun downloadUserImages(objectID: List<String>, completion: (List<Uri>) -> Unit) {
         val storage = FirebaseStorage.getInstance()
         // Crear una lista vacía para almacenar las URIs
         val imageUris = mutableListOf<Uri>()
@@ -88,7 +98,7 @@ class ListUsersActivity : AppCompatActivity() {
         var downloadCount = 0
 
         // Itera sobre la lista de nombres de usuario
-        for (username in usernames) {
+        for (username in objectID) {
             // Reemplaza cualquier caracter que no sea adecuado para un nombre de archivo.
             val sanitizedUsername = username
 
@@ -97,7 +107,7 @@ class ListUsersActivity : AppCompatActivity() {
 
             // Obtiene la URL de descarga
             imageRef.downloadUrl
-                .addOnSuccessListener { uri->
+                .addOnSuccessListener { uri ->
                     // Agrega la URI a la lista
                     imageUris.add(uri)
 
@@ -105,11 +115,11 @@ class ListUsersActivity : AppCompatActivity() {
                     downloadCount++
 
                     // Si hemos recibido todas las URIs, pasamos la lista a la función de completado
-                    if (downloadCount == usernames.size) {
+                    if (downloadCount == objectID.size) {
                         completion(imageUris)
                     }
                 }
-                .addOnFailureListener { exception->
+                .addOnFailureListener { exception ->
                     // Incrementa el conteo de descargas incluso en caso de fallo
                     downloadCount++
 
@@ -117,7 +127,7 @@ class ListUsersActivity : AppCompatActivity() {
                     println("Error al descargar la imagen de $sanitizedUsername: ${exception.message}")
 
                     // Aún en caso de fallo, debemos verificar si hemos terminado
-                    if (downloadCount == usernames.size) {
+                    if (downloadCount == objectID.size) {
                         completion(imageUris)
                     }
                 }

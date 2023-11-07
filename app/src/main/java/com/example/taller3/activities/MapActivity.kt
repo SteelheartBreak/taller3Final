@@ -26,6 +26,8 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
+import com.parse.ParseException
+import com.parse.ParseObject
 import com.parse.ParseUser
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -79,6 +81,10 @@ class MapActivity : AppCompatActivity() {
         // mover la camara a Bogotá
         moveCamera(4.61, -74.07)
 
+        binding.disponiblebtn.setOnClickListener {
+            toggleUserState()
+        }
+        checkAndUpdateButtonState()
 
 
 
@@ -106,6 +112,8 @@ class MapActivity : AppCompatActivity() {
             val intent = Intent(this, ListUsersActivity::class.java)
             startActivity(intent)
         }
+
+
     }
 
     // funcion para establecer el mapa en la actividad
@@ -273,11 +281,59 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    fun setUpListarButton(){
-        binding.listarbtn.setOnClickListener{
 
+
+    private fun toggleUserState() {
+        val currentUser = ParseUser.getCurrentUser()
+        if (currentUser != null) {
+            val estado = currentUser.getString("estado")
+            if (estado == "F") {
+                currentUser.put("estado", "T")
+                currentUser.saveInBackground { e ->
+                    if (e == null) {
+                        updateButtonState("ENABLE")
+                    } else {
+                        // Manejar errores, por ejemplo, mostrar un mensaje al usuario
+                    }
+                }
+            } else if (estado == "T") {
+                currentUser.put("estado", "F")
+                currentUser.saveInBackground { e ->
+                    if (e == null) {
+                        updateButtonState("DISABLE")
+                    } else {
+                        // Manejar errores, por ejemplo, mostrar un mensaje al usuario
+                    }
+                }
+            }
         }
     }
+
+    private fun checkAndUpdateButtonState() {
+        val currentUser = ParseUser.getCurrentUser()
+        currentUser?.fetchInBackground { obj: ParseObject?, e: ParseException? ->
+            if (e == null) {
+                val user = obj as ParseUser
+                val estado = user.getString("estado")
+                updateButtonState(if (estado == "F") "DISABLE" else "ENABLE")
+            } else {
+                // Manejar errores, por ejemplo, mostrar un mensaje al usuario
+            }
+        }
+    }
+
+
+    private fun updateButtonState(action: String) {
+        when (action) {
+            "ENABLE" -> {
+                binding.disponiblebtn.text = "DISABLE"
+            }
+            "DISABLE" -> {
+                binding.disponiblebtn.text = "ENABLE"
+            }
+        }
+    }
+
 
 
 }

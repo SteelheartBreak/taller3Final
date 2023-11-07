@@ -25,6 +25,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.parse.ParseACL
 import com.parse.ParseException
 import com.parse.ParseObject
 import com.parse.ParseUser
@@ -124,6 +125,10 @@ class RegistroActivity : AppCompatActivity() {
         userRegistro.put("latitud",latitud)
         userRegistro.put("longitud",longitud)
 
+        val acl = ParseACL()
+        acl.publicReadAccess = true
+        userRegistro.acl=acl
+
         userRegistro.signUpInBackground { e: ParseException? ->
             if (e == null) {
                 // Registro exitoso, guarda el token de sesión en SharedPreferences
@@ -183,8 +188,9 @@ class RegistroActivity : AppCompatActivity() {
 
     fun uploadFirebaseImage(uriUpload: Uri) {
         // Obtén una referencia al lugar donde las fotos serán guardadas
-        val nombreUser= binding.inputCorreoR.text.toString()
-        val storageRef: StorageReference = FirebaseStorage.getInstance().reference.child("images/${nombreUser}")
+        val currentUser = ParseUser.getCurrentUser()
+        val objectId = currentUser?.objectId
+        val storageRef: StorageReference = FirebaseStorage.getInstance().reference.child("images/${objectId}.png")
 
         // Inicia la carga del archivo
         storageRef.putFile(uriUpload)
@@ -246,4 +252,6 @@ class RegistroActivity : AppCompatActivity() {
             permisosUbicacionRequestCode
         )
     }
+
+
 }

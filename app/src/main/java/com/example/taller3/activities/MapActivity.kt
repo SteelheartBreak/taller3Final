@@ -50,6 +50,7 @@ class MapActivity : AppCompatActivity() {
     lateinit var lugares : List<LocationG> // Base de datos
     lateinit var markers : List<Marker> // Lista de marcadores de los lugares
     val bundle = Bundle()
+    lateinit var pastLocation : Location // ubicacion anterior
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -175,7 +176,11 @@ class MapActivity : AppCompatActivity() {
             override fun onLocationResult(result: LocationResult) {
                 super.onLocationResult(result)
                 if(result!=null){
+                    pastLocation = lastLocation
                     lastLocation = result.lastLocation!!
+                    if(deviceMoved()){
+                        setMyLocationMarker()
+                    }
                 }
             }
         }
@@ -320,6 +325,12 @@ class MapActivity : AppCompatActivity() {
                 // Manejar errores, por ejemplo, mostrar un mensaje al usuario
             }
         }
+    }
+
+    //funcion para determinar si el dispositivo se movio mas de 40 metros
+    fun deviceMoved() : Boolean{
+        val distance = pastLocation.distanceTo(lastLocation)
+        return distance > 40
     }
 
 

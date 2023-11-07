@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/usersRecyclerView"
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listUsers"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:scrollbars="vertical">
-    <!-- RecyclerView does not require a closing tag if it doesn't contain any children in the XML -->
-</androidx.recyclerview.widget.RecyclerView>
+    tools:context=".activities.ListUsersActivity">
+
+</ListView>

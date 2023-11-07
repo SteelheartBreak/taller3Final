@@ -2,12 +2,8 @@ package com.example.taller3.activities
 
 import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.taller3.adapters.UsersAdapter
 import com.example.taller3.databinding.ActivityListUsersBinding
 import com.google.firebase.storage.FirebaseStorage
 import com.parse.ParseQuery
@@ -15,8 +11,6 @@ import com.parse.ParseUser
 
 
 class ListUsersActivity : AppCompatActivity() {
-    val globalUsernamesList = mutableListOf<String>()
-    lateinit var adapter : UsersAdapter
     val usernameList = mutableListOf<String>()
 
     private lateinit var binding: ActivityListUsersBinding
@@ -27,14 +21,8 @@ class ListUsersActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        loadUsernames()
-        val projection = arrayOf(ContactsContract.Profile._ID, ContactsContract.Profile.DISPLAY_NAME_PRIMARY)
-        adapter = UsersAdapter(this, null, 0)
-        binding.listUsers.adapter = adapter
-
-        val cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, projection, null, null, null)
-        adapter.changeCursor(cursor)
         updateUsers()
+
 
 
     }
@@ -109,7 +97,7 @@ class ListUsersActivity : AppCompatActivity() {
 
             // Obtiene la URL de descarga
             imageRef.downloadUrl
-                .addOnSuccessListener { uri ->
+                .addOnSuccessListener { uri->
                     // Agrega la URI a la lista
                     imageUris.add(uri)
 
@@ -121,7 +109,7 @@ class ListUsersActivity : AppCompatActivity() {
                         completion(imageUris)
                     }
                 }
-                .addOnFailureListener { exception ->
+                .addOnFailureListener { exception->
                     // Incrementa el conteo de descargas incluso en caso de fallo
                     downloadCount++
 

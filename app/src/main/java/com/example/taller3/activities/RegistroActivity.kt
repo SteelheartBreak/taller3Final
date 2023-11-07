@@ -31,6 +31,9 @@ class RegistroActivity : AppCompatActivity() {
     var confirmarContrasena = ""
     var apellido =""
     var numIdentificacion =""
+    // latitud y longitud de la ubicación actual
+    var latitud = 0.0
+    var longitud = 0.0
     lateinit var lastLocation : Location // Última ubicación conocida
     private val permisosUbicacionRequestCode = 123 // Identificador único para la solicitud de permisos
 
@@ -152,6 +155,8 @@ class RegistroActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
+                    latitud = lastLocation.latitude
+                    longitud = lastLocation.longitude
                 }
             }
         }

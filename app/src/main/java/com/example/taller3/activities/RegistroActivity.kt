@@ -5,13 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import com.example.taller3.databinding.ActivityRegistroBinding
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -45,6 +52,19 @@ class RegistroActivity : AppCompatActivity() {
 
     val TAG = "GREETING_APP"
     val USER_CN = "Usuario"
+    private var isImageSelected = false
+
+    private lateinit var uriUpload : Uri
+
+
+    val getContentGallery = registerForActivityResult(
+        ActivityResultContracts.GetContent(),
+        ActivityResultCallback {
+            loadImage(it!!)
+        }
+    )
+
+    lateinit var storageRef : StorageReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -60,6 +80,10 @@ class RegistroActivity : AppCompatActivity() {
         startLocationUpdates()
 
         setupRegisterButton()
+
+        binding.imageView12.setOnClickListener{
+            getContentGallery.launch("image/*")
+        }
 
         binding.backButtonR.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
@@ -95,6 +119,11 @@ class RegistroActivity : AppCompatActivity() {
         numIdentificacion = binding.inputIdentificacionR.text.toString()
         userRegistro.put("numIdentificacion", numIdentificacion)
 
+        userRegistro.put("estado","F")
+
+        userRegistro.put("latitud",latitud)
+        userRegistro.put("longitud",longitud)
+
         userRegistro.signUpInBackground { e: ParseException? ->
             if (e == null) {
                 // Registro exitoso, guarda el token de sesión en SharedPreferences
@@ -114,6 +143,9 @@ class RegistroActivity : AppCompatActivity() {
             }
 
         }
+
+        uploadFirebaseImage(uriUpload)
+
     }
 
     private fun validateForm(): Boolean {
@@ -133,7 +165,7 @@ class RegistroActivity : AppCompatActivity() {
 
         val contrasenasCoinciden = contrasena == confirmarContrasena
 
-        return todasLasCasillasTienenTexto && contrasenasCoinciden && emailValido
+        return todasLasCasillasTienenTexto && contrasenasCoinciden && emailValido && isImageSelected
     }
 
     fun isValidEmail(email: String): Boolean {
@@ -141,10 +173,38 @@ class RegistroActivity : AppCompatActivity() {
         return email.matches(emailRegex)
     }
 
+    fun loadImage(uri : Uri){
+        val imageStream = getContentResolver().openInputStream(uri)
+        val bitmap = BitmapFactory.decodeStream(imageStream)
+        binding.imageView12.setImageBitmap(bitmap)
+        isImageSelected = true
+        uriUpload=uri
+    }
+
+    fun uploadFirebaseImage(uriUpload: Uri) {
+        // Obtén una referencia al lugar donde las fotos serán guardadas
+        val nombreUser= binding.inputCorreoR.text.toString()
+        val storageRef: StorageReference = FirebaseStorage.getInstance().reference.child("images/${nombreUser}")
+
+        // Inicia la carga del archivo
+        storageRef.putFile(uriUpload)
+            .addOnSuccessListener { taskSnapshot: UploadTask.TaskSnapshot ->
+                // La carga fue exitosa, aquí puedes obtener, por ejemplo, la URL de la imagen
+                val downloadUrl = taskSnapshot.metadata?.reference?.downloadUrl
+                downloadUrl?.addOnSuccessListener { uri ->
+                    println("Imagen cargada con éxito. URL: $uri")
+                }
+            }
+            .addOnFailureListener { exception: Exception ->
+                // La carga falló, maneja el error
+                println("Error al cargar la imagen: ${exception.message}")
+            }
+    }
+
     fun createLocationRequest() : LocationRequest{
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000)
             .setWaitForAccurateLocation(true)
-            .setMinUpdateIntervalMillis(3000)
+            .setMinUpdateIntervalMillis(1000)
             .build()
         return locationRequest
     }

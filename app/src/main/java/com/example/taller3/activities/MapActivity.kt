@@ -79,8 +79,7 @@ class MapActivity : AppCompatActivity() {
         // mover la camara a Bogotá
         moveCamera(4.61, -74.07)
 
-        //Escuchar en el boton de log out
-        setUpLogOutButton()
+
 
 
     }
@@ -100,7 +99,13 @@ class MapActivity : AppCompatActivity() {
 
     // funcion para configurar todos listeners de los botones
     fun setButtons(){
+        //Escuchar en el boton de log out
+        setUpLogOutButton()
 
+        binding.listarbtn.setOnClickListener{
+            val intent = Intent(this, ListUsersActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     // funcion para establecer el mapa en la actividad
@@ -264,6 +269,12 @@ class MapActivity : AppCompatActivity() {
 
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+
+        }
+    }
+
+    fun setUpListarButton(){
+        binding.listarbtn.setOnClickListener{
 
         }
     }

@@ -27,7 +27,7 @@ class ListUsersActivity : AppCompatActivity() {
 
 
         loadUsernames()
-
+        val projection = arrayOf(ContactsContract.Profile._ID, ContactsContract.Profile.DISPLAY_NAME_PRIMARY)
         adapter = UsersAdapter(this, null, 0)
         binding.listUsers.adapter = adapter
 

@@ -3,13 +3,13 @@ package com.example.taller3.activities
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.taller3.R
 import com.example.taller3.databinding.ActivitySeguimientoBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -17,17 +17,19 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.parse.ParseQuery
+import com.parse.ParseUser
+import com.parse.livequery.ParseLiveQueryClient
+import com.parse.livequery.SubscriptionHandling
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-
-import android.util.Log
-import com.parse.ParseQuery
-import com.parse.ParseUser
-import com.parse.livequery.ParseLiveQueryClient
-import com.parse.livequery.SubscriptionHandling
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 
 class SeguimientoActivity : AppCompatActivity() {
@@ -38,7 +40,11 @@ class SeguimientoActivity : AppCompatActivity() {
     lateinit var locationRequest : LocationRequest // Solicitud de ubicación
     lateinit var locationCallback: LocationCallback // Callback de ubicación
     lateinit var lastLocation : Location // Última ubicación conocida
+    lateinit var lastLocationSeguir : Location // Última ubicación conocida del usuario a seguir
     lateinit var marker : Marker // Marcador
+    lateinit var markerSeguir : Marker // Marcador de la persona a seguir
+    private val RADIUS_OF_EARTH_KM = 6371.0
+
 
     lateinit var parseLiveQueryClient: ParseLiveQueryClient
     lateinit var parseQuery: ParseQuery<ParseUser>
@@ -220,7 +226,29 @@ class SeguimientoActivity : AppCompatActivity() {
             movimientoCamaraPrimeraVez=true
             moveCamera(lastLocation.latitude,lastLocation.longitude)
         }
+    }
 
+    //funcion que establece el marcador en la ubicacion actual (SEGUIR)
+    fun setSeguirLocationMarker(){
+        if(this::markerSeguir.isInitialized){
+            map.overlays.remove(markerSeguir)
+        }
+        markerSeguir = Marker(map)
+        markerSeguir.position = GeoPoint(latitudSeguir, longitudSeguir)
+        markerSeguir.title = "Ubicación a seguir"
+        markerSeguir.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        map.overlays.add(markerSeguir)
+    }
+
+    fun distance(lat1: Double, long1: Double, lat2: Double, long2: Double): Double {
+        val latDistance = Math.toRadians(lat1 - lat2)
+        val lngDistance = Math.toRadians(long1 - long2)
+        val a = (sin(latDistance / 2) * sin(latDistance / 2)
+                + (cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2))
+                * sin(lngDistance / 2) * sin(lngDistance / 2)))
+        val c = 2 * Math.atan2(sqrt(a), sqrt(1 - a))
+        val result: Double = RADIUS_OF_EARTH_KM * c
+        return (result * 100.0).roundToInt() / 100.0
     }
 
 }

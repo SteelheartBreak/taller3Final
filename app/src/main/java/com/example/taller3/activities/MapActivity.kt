@@ -100,6 +100,7 @@ class MapActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         map.onResume()
+        startLocationUpdates()
     }
 
     // funcion para configurar todos listeners de los botones

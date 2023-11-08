@@ -403,6 +403,10 @@ class MapActivity : AppCompatActivity() {
                     // Aquí llamas a la función que maneja este cambio específico, pasando el usuario
                     handleUserStateChange(it)
                 }
+
+                if (estadoAnterior == "T" && nuevoEstado == "F"){
+                    userStates[userId] = nuevoEstado
+                }
             }
         }
     }

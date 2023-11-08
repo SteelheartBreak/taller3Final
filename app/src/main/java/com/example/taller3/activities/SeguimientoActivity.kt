@@ -114,8 +114,6 @@ class SeguimientoActivity : AppCompatActivity() {
                 setSeguirLocationMarker()
                 moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
                 val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
-
-                Toast.makeText(this, "Distancia: $distancia km", Toast.LENGTH_SHORT).show()
                 binding.DistanciaTxtView.text = "Distancia: $distancia km"
                 Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
             }

@@ -197,7 +197,7 @@ class SeguimientoActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
-
+                    setLocationMarker()
                 }
             }
         }
@@ -228,7 +228,17 @@ class SeguimientoActivity : AppCompatActivity() {
         }
     }
 
-    //funcion que establece el marcador en la ubicacion actual (JAVERIANA)
+    //funcion que establece el marcador en la ubicacion actual
+    fun setLocationMarker(){
+        if(this::marker.isInitialized){
+            map.overlays.remove(marker)
+        }
+        marker = Marker(map)
+        marker.position = GeoPoint(lastLocation.latitude, lastLocation.longitude)
+        marker.title = "Ubicación actual"
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        map.overlays.add(marker)
+    }
 
 
     //funcion que establece el marcador en la ubicacion actual (SEGUIR)

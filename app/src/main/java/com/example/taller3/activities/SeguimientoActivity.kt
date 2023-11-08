@@ -110,15 +110,15 @@ class SeguimientoActivity : AppCompatActivity() {
             // guarda la latitud y longitud de la persona a seguir en lastLocationSeguir
             lastLocationSeguir.latitude = latitud
             lastLocationSeguir.longitude = longitud
-            setSeguirLocationMarker()
-            moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
-            val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
+            runOnUiThread {
+                setSeguirLocationMarker()
+                moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
+                val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
 
-            Toast.makeText(this, "Distancia: $distancia km", Toast.LENGTH_SHORT).show()
-            binding.DistanciaTxtView.text = "Distancia: $distancia km"
-            Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
-
-
+                Toast.makeText(this, "Distancia: $distancia km", Toast.LENGTH_SHORT).show()
+                binding.DistanciaTxtView.text = "Distancia: $distancia km"
+                Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
+            }
         }
         if(latitud == null || longitud == null){
             Toast.makeText(this, "El usuario no ha compartido su ubicación", Toast.LENGTH_SHORT).show()

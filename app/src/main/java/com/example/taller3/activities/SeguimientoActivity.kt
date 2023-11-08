@@ -113,10 +113,12 @@ class SeguimientoActivity : AppCompatActivity() {
             setSeguirLocationMarker()
             moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
             val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
-            // toas para mostrar la distancia entre los dos usuarios
+
             Toast.makeText(this, "Distancia: $distancia km", Toast.LENGTH_SHORT).show()
             binding.DistanciaTxtView.text = "Distancia: $distancia km"
             Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
+
+
         }
         if(latitud == null || longitud == null){
             Toast.makeText(this, "El usuario no ha compartido su ubicación", Toast.LENGTH_SHORT).show()
@@ -196,7 +198,7 @@ class SeguimientoActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
-                    setMyLocationMarker()
+
                 }
             }
         }
@@ -220,9 +222,11 @@ class SeguimientoActivity : AppCompatActivity() {
 
     // funcion que mueve la camara, dadas la latitud y longitud.
     fun moveCamera(latitude: Double, longitude: Double){
-        val geoPoint = GeoPoint(latitude, longitude)
-        map.controller.animateTo(geoPoint)
-        map.controller.setZoom(18.0)
+        runOnUiThread {
+            val geoPoint = GeoPoint(latitude, longitude)
+            map.controller.animateTo(geoPoint)
+            map.controller.setZoom(18.0)
+        }
     }
 
     //funcion que establece el marcador en la ubicacion actual (JAVERIANA)
@@ -262,6 +266,7 @@ class SeguimientoActivity : AppCompatActivity() {
                 * sin(lngDistance / 2) * sin(lngDistance / 2)))
         val c = 2 * Math.atan2(sqrt(a), sqrt(1 - a))
         val result: Double = RADIUS_OF_EARTH_KM * c
+        println("RESULT:"+(result * 100.0).roundToInt() / 100.0)
         return (result * 100.0).roundToInt() / 100.0
     }
 

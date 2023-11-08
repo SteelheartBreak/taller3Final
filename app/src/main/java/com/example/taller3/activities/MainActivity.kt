@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     )
                     toast.show()
+                    eliminarTokenDeSesion()
                 }
             }
         }else{
@@ -78,6 +79,26 @@ class MainActivity : AppCompatActivity() {
                 Log.d("PARSE","entra a anonimo")
             }
 
+        }
+    }
+
+    private fun eliminarTokenDeSesion() {
+        val sharedPreferences = getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.remove("sessionToken")
+        editor.apply()
+
+        ParseAnonymousUtils.logIn { user, e ->
+            if (e == null) {
+                // El inicio de sesión anónimo fue exitoso
+                val userId = user.objectId
+                // Realiza acciones con el usuario anónimo, si es necesario
+            } else {
+                // El inicio de sesión anónimo falló
+                Log.e("Parse", "Error al iniciar sesión anónimamente: " + e.message)
+                Log.e("PARSE",e.stackTraceToString())
+            }
+            Log.d("PARSE","entra a anonimo")
         }
     }
 

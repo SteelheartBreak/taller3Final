@@ -24,14 +24,8 @@ class ListUsersActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityListUsersBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         updateUsers()
-
-
     }
-
-
-
     private fun updateUsers() {
         val currentUser = ParseUser.getCurrentUser()
         val query = ParseUser.getQuery()

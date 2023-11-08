@@ -23,6 +23,13 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
+import android.util.Log
+import com.parse.ParseQuery
+import com.parse.ParseUser
+import com.parse.livequery.ParseLiveQueryClient
+import com.parse.livequery.SubscriptionHandling
+
+
 class SeguimientoActivity : AppCompatActivity() {
     lateinit var binding: ActivitySeguimientoBinding
     private val permisosUbicacionRequestCode = 123 // Identificador único para la solicitud de permisos
@@ -32,6 +39,13 @@ class SeguimientoActivity : AppCompatActivity() {
     lateinit var locationCallback: LocationCallback // Callback de ubicación
     lateinit var lastLocation : Location // Última ubicación conocida
     lateinit var marker : Marker // Marcador
+
+    lateinit var parseLiveQueryClient: ParseLiveQueryClient
+    lateinit var parseQuery: ParseQuery<ParseUser>
+    var idSeguir =""
+    var latitudSeguir : Double = 0.0
+    var longitudSeguir : Double = 0.0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +65,40 @@ class SeguimientoActivity : AppCompatActivity() {
         // mover la camara a la ubicacion actual
         setMyLocationMarker();
 
+        idSeguir = intent.getStringExtra("objectID").toString()
+        println("Se ha iniciado el seguimiento a: "+idSeguir)
+
+        initParseLiveQuery()
+        setupSubscription()
+    }
+
+    private fun initParseLiveQuery() {
+        parseLiveQueryClient = ParseLiveQueryClient.Factory.getClient()
+    }
+
+    private fun setupSubscription() {
+
+        parseQuery = ParseUser.getQuery().whereEqualTo("objectId", idSeguir)
+
+        // Subscribirse a los cambios
+        val subscriptionHandling = parseLiveQueryClient.subscribe(parseQuery)
+
+        // Reaccionar a los cambios en las columnas específicas
+        subscriptionHandling.handleEvent(SubscriptionHandling.Event.UPDATE) { _, user ->
+            user?.let {
+                if (it.has("latitud") && it.has("longitud")) {
+                    val latitud = it.getDouble("latitud")
+                    val longitud = it.getDouble("longitud")
+                    locationChanged(latitud, longitud)
+                }
+            }
+        }
+    }
+
+    // Método que maneja los cambios en la ubicación
+    private fun locationChanged(latitud: Double, longitud: Double) {
+        // Actualizar la interfaz de usuario o lógica de la aplicación según sea necesario
+        Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
     }
 
     // metodo onPause

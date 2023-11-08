@@ -106,13 +106,14 @@ class SeguimientoActivity : AppCompatActivity() {
     // Método que maneja los cambios en la ubicación
     private fun locationChanged(latitud: Double, longitud: Double) {
         //verifica que los valores de latitud y longitud sean validos
-        if (latitud != 0.0 || longitud != 0.0) {
+        if ((latitud != 0.0 || longitud != 0.0)&&(lastLocation!=null)) {
             // guarda la latitud y longitud de la persona a seguir en lastLocationSeguir
             lastLocationSeguir.latitude = latitud
             lastLocationSeguir.longitude = longitud
             runOnUiThread {
                 setSeguirLocationMarker()
                 moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
+
                 val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
                 binding.DistanciaTxtView.text = "Distancia: $distancia km"
                 Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
@@ -228,21 +229,7 @@ class SeguimientoActivity : AppCompatActivity() {
     }
 
     //funcion que establece el marcador en la ubicacion actual (JAVERIANA)
-    fun setMyLocationMarker(){
-        if(this::marker.isInitialized){
-            map.overlays.remove(marker)
-        }
-        marker = Marker(map)
-        marker.position = GeoPoint(lastLocation.latitude, lastLocation.longitude)
-        marker.title = "Mi ubicación"
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        map.overlays.add(marker)
 
-        if (!movimientoCamaraPrimeraVez){
-            movimientoCamaraPrimeraVez=true
-            moveCamera(lastLocation.latitude,lastLocation.longitude)
-        }
-    }
 
     //funcion que establece el marcador en la ubicacion actual (SEGUIR)
     fun setSeguirLocationMarker(){

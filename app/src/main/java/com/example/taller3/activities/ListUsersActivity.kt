@@ -24,70 +24,72 @@ class ListUsersActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityListUsersBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        updateUsers()
-        val adapter = UsersAdapter(this, usuarios)
 
-        // Asigna el adaptador a tu ListView
-        binding.listUsers.adapter = adapter
+        updateUsers()
+
+
     }
 
 
 
-    fun updateUsers() {
-        // Crear una lista vacía para almacenar los nombres de usuario
-
-
-        // Obtener el usuario actual
+    private fun updateUsers() {
         val currentUser = ParseUser.getCurrentUser()
-
-        // Obtener la consulta de ParseUser
         val query = ParseUser.getQuery()
+        var cont = 0
 
-        // Excluir al usuario actual
         if (currentUser != null) {
             query.whereNotEqualTo("objectId", currentUser.objectId)
         }
 
-        // Filtrar solo los usuarios cuyo estado es "T"
         query.whereEqualTo("estado", "T")
 
-        // Ejecutar la consulta en segundo plano
         query.findInBackground { userObjects, e ->
             if (e == null) {
-                // Si no hay error, procesar la lista de usuarios
+                val usernameList = mutableListOf<String>()
+                val objectID = mutableListOf<String>()
+
                 userObjects?.forEach { user ->
-                    // Asumiendo que el campo para el nombre de usuario es 'username'
                     user?.let { username ->
-                        // Añadir el nombre de usuario a la lista si no es nulo
                         usernameList.add(user.username)
                         objectID.add(user.objectId)
                     }
                 }
 
-
-                // Aquí puedes usar usernameList con los nombres de usuario
                 println("Lista de nombres de usuario con estado 'T': $usernameList")
                 println("Lista de ObjectsID con estado 'T': $objectID")
 
                 downloadUserImages(objectID) { uris ->
-                    // Aquí tienes tu lista de URIs
                     for (uri in uris) {
                         println("URI descargada: $uri")
                         fotos.add(uri.toString())
+                        cont += 1
                     }
-                    // Puedes hacer algo con la lista de URIs aquí
+                    if(usernameList.size == fotos.size){
+                        for (i in 0 until usernameList.size){
+                            usuarios.add(Usuario(usernameList[i], fotos[i], objectID[i]))
+                        }
+                        println("Lista de usuario con estado 'T': $usuarios")
+
+
+                        val adapter = UsersAdapter(this, usuarios)
+
+                        // Asigna el adaptador a tu ListView
+                        binding.listUsers.adapter = adapter
+                    }
                 }
+
             } else {
-                // Manejar el error
                 println("Error al buscar usuarios: " + e.localizedMessage)
+                // Manejar el error aquí
+
+                // Asegurarse de que la función updateUsers termine aquí en caso de error
+                println("Termina UpdateUsers")
             }
+            println("Termina Query")
         }
-        var i = 0
-        while(i < usernameList.size){
-            usuarios.add(Usuario(usernameList[i], fotos[i], objectID[i]))
-            i += 1
-        }
+        println("Termina UpdateUsers Final")
     }
+
 
     fun downloadUserImages(objectID: List<String>, completion: (List<Uri>) -> Unit) {
         val storage = FirebaseStorage.getInstance()
@@ -131,6 +133,6 @@ class ListUsersActivity : AppCompatActivity() {
                         completion(imageUris)
                     }
                 }
+            }
         }
-    }
 }

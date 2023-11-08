@@ -12,9 +12,11 @@ import android.widget.TextView
 import com.example.taller3.R
 import com.example.taller3.model.Usuario
 import com.bumptech.glide.Glide
+import kotlinx.coroutines.CoroutineScope
 
 class UsersAdapter(context: Context, userList: List<Usuario>) :
     ArrayAdapter<Usuario>(context, 0, userList) {
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var listItemView = convertView
 

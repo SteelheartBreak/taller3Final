@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
@@ -46,13 +47,13 @@ class SeguimientoActivity : AppCompatActivity() {
     private val RADIUS_OF_EARTH_KM = 6371.0
 
 
-    lateinit var parseLiveQueryClient: ParseLiveQueryClient
-    lateinit var parseQuery: ParseQuery<ParseUser>
+
     var idSeguir =""
     var latitudSeguir : Double = 0.0
     var longitudSeguir : Double = 0.0
 
     var movimientoCamaraPrimeraVez = false
+    private val handler = Handler()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,46 +75,71 @@ class SeguimientoActivity : AppCompatActivity() {
 
         idSeguir = intent.getStringExtra("objectID").toString()
 
+        startQuery()
 
-        initParseLiveQuery()
-        setupSubscription()
     }
 
-    private fun initParseLiveQuery() {
-        parseLiveQueryClient = ParseLiveQueryClient.Factory.getClient()
-    }
+    private val queryRunnable = object : Runnable {
+        override fun run() {
+            // Crear una consulta Parse para obtener el usuario por su objectId
+            val parseQuery = ParseQuery.getQuery<ParseUser>("_User")
+            parseQuery.whereEqualTo("objectId", idSeguir)
 
-    private fun setupSubscription() {
+            parseQuery.findInBackground { users, e ->
+                if (e == null) {
+                    // La consulta fue exitosa, verificar si se encontró un usuario
+                    if (users.isNotEmpty()) {
+                        // Se encontró al menos un usuario
+                        val user = users[0] // Tomar el primer usuario de la lista
+                        val latitud = user.getDouble("latitud") // Obtener la latitud del usuario
+                        val longitud = user.getDouble("longitud") // Obtener la longitud del usuario
+                        locationChanged(latitud,longitud)
+                        // Imprimir o usar las coordenadas obtenidas
+                        Log.i("ACT-LOCALIZACION","Longitud: $longitud, Latitud: $latitud")
 
-        parseQuery = ParseUser.getQuery().whereEqualTo("objectId", idSeguir)
-        println("Se ha iniciado el seguimiento a: "+idSeguir)
-
-        // Subscribirse a los cambios
-        val subscriptionHandling = parseLiveQueryClient.subscribe(parseQuery)
-
-        // Reaccionar a los cambios en las columnas específicas
-        subscriptionHandling.handleEvent(SubscriptionHandling.Event.UPDATE) { _, user ->
-            user?.let {
-                if (it.has("latitud") && it.has("longitud")) {
-                    val latitud = it.getDouble("latitud")
-                    val longitud = it.getDouble("longitud")
-                    locationChanged(latitud, longitud)
+                    } else {
+                        // No se encontraron usuarios
+                        Log.i("Parse", "No se encontraron usuarios")
+                    }
+                } else {
+                    // Hubo un error en la consulta
+                    Log.e("Parse", "Error en la consulta: " + e.message)
+                    Log.e("Parse", e.stackTraceToString())
                 }
+
+                // Programar la siguiente consulta después de 3 segundos
+                handler.postDelayed(this, 3000) // 3000 milisegundos (3 segundos)
             }
         }
     }
+    private fun startQuery() {
+        // Iniciar la consulta periódica
+        handler.post(queryRunnable)
+    }
 
-    // Método que maneja los cambios en la ubicación
+    private fun stopQuery() {
+        // Detener la consulta periódica
+        handler.removeCallbacks(queryRunnable)
+    }
+
     private fun locationChanged(latitud: Double, longitud: Double) {
         // Actualizar la interfaz de usuario o lógica de la aplicación según sea necesario
-        Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
+        println("Ubicación actualizada: Latitud $latitud, Longitud $longitud")
     }
+
+
+
+
+
+    // Método que maneja los cambios en la ubicación
+
 
     // metodo onPause
     override fun onPause() {
         super.onPause()
         locationClient.removeLocationUpdates(locationCallback)
         map.onPause()
+        stopQuery()
     }
 
     // metodo onResume

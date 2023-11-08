@@ -40,7 +40,7 @@ class SeguimientoActivity : AppCompatActivity() {
     lateinit var locationRequest : LocationRequest // Solicitud de ubicación
     lateinit var locationCallback: LocationCallback // Callback de ubicación
     lateinit var lastLocation : Location // Última ubicación conocida
-    lateinit var lastLocationSeguir : Location // Última ubicación conocida del usuario a seguir
+    var lastLocationSeguir = Location("") // Última ubicación conocida de la persona a seguir
     lateinit var marker : Marker // Marcador
     lateinit var markerSeguir : Marker // Marcador de la persona a seguir
     private val RADIUS_OF_EARTH_KM = 6371.0
@@ -105,8 +105,20 @@ class SeguimientoActivity : AppCompatActivity() {
 
     // Método que maneja los cambios en la ubicación
     private fun locationChanged(latitud: Double, longitud: Double) {
-        // Actualizar la interfaz de usuario o lógica de la aplicación según sea necesario
-        Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
+        //verifica que los valores de latitud y longitud sean validos
+        if (latitud != 0.0 || longitud != 0.0) {
+            // guarda la latitud y longitud de la persona a seguir en lastLocationSeguir
+            lastLocationSeguir.latitude = latitud
+            lastLocationSeguir.longitude = longitud
+            setSeguirLocationMarker()
+            moveCamera(lastLocationSeguir.latitude,lastLocationSeguir.longitude)
+            val distancia = distance(lastLocation.latitude, lastLocation.longitude, lastLocationSeguir.latitude, lastLocationSeguir.longitude)
+            binding.DistanciaTxtView.text = "Distancia: $distancia km"
+            Log.i("LocationChange", "Ubicación actualizada: Latitud $latitud, Longitud $longitud")
+        }
+        if(latitud == null || longitud == null){
+            Toast.makeText(this, "El usuario no ha compartido su ubicación", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // metodo onPause
@@ -234,7 +246,7 @@ class SeguimientoActivity : AppCompatActivity() {
             map.overlays.remove(markerSeguir)
         }
         markerSeguir = Marker(map)
-        markerSeguir.position = GeoPoint(latitudSeguir, longitudSeguir)
+        markerSeguir.position = GeoPoint(lastLocationSeguir.latitude, lastLocationSeguir.longitude)
         markerSeguir.title = "Ubicación a seguir"
         markerSeguir.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(markerSeguir)

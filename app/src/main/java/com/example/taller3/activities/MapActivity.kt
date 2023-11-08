@@ -350,10 +350,11 @@ class MapActivity : AppCompatActivity() {
                 }
        }
 
-    fun sendNotification(objectId: String) {
+    fun sendNotification(objectId: String, username: String) {
+        println("Notificación")
         val channelId = "channel"
         val title = "actualización"
-        val message = "Un usuario ha cambiado su visibilidad"
+        val message = "El usuario $username ha cambiado su visibilidad"
 
         // Crear un NotificationManager
         val notificationManager = baseContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -377,6 +378,7 @@ class MapActivity : AppCompatActivity() {
             .setContentTitle(title) // Título de la notificación
             .setContentText(message) // Contenido de la notificación
             .setContentIntent(pendingIntent) // Asignar el intent a la notificación
+            .setAutoCancel(true)
 
         // Mostrar la notificación
         notificationManager.notify(1, builder.build()) // El valor 1 es un identificador único para la notificación
@@ -411,7 +413,7 @@ class MapActivity : AppCompatActivity() {
         }
     }
     private fun handleUserStateChange(user: ParseUser) {
-        sendNotification(user.objectId.toString())
+        sendNotification(user.objectId.toString(), user.username)
         // Manejar el cambio de estado del usuario aquí
         // Por ejemplo, actualizar la interfaz de usuario o realizar otras acciones en respuesta al cambio
         Log.i("UserStateChange", "El usuario ${user.objectId} ha cambiado su estado a 'T'")

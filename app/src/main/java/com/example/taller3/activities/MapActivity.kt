@@ -51,6 +51,7 @@ class MapActivity : AppCompatActivity() {
     lateinit var lugares : List<LocationG> // Base de datos
     lateinit var markers : List<Marker> // Lista de marcadores de los lugares
     val bundle = Bundle()
+    var movimientoCamaraPrimeraVez = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -179,6 +180,7 @@ class MapActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
+                    setMyLocationMarker()
                     var userParse = ParseUser.getCurrentUser()
                     userParse.put("latitud",lastLocation.latitude)
                     userParse.put("longitud",lastLocation.longitude)
@@ -229,6 +231,11 @@ class MapActivity : AppCompatActivity() {
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(marker)
 
+        if (!movimientoCamaraPrimeraVez){
+            movimientoCamaraPrimeraVez=true
+            moveCamera(lastLocation.latitude,lastLocation.longitude)
+        }
+
     }
 
     // funcion que establece los listeners de los marcadores.
@@ -257,27 +264,7 @@ class MapActivity : AppCompatActivity() {
         setMarkerListeners()
     }
 
-    fun createLightSensorListener(): SensorEventListener {
-        val ret: SensorEventListener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (map != null) {
-                    if (event != null) {
-                        if (event.values[0] < 5000) {
-                            // Modo oscuro
-                            map.overlayManager.tilesOverlay.setColorFilter(TilesOverlay.INVERT_COLORS)
-                        } else {
-                            // Modo claro
-                            map.overlayManager.tilesOverlay.setColorFilter(null)
-                        }
-                    }
-                }
-            }
 
-            override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-            }
-        }
-        return ret
-    }
 
     fun setUpLogOutButton(){
         binding.logOutbtn.setOnClickListener{

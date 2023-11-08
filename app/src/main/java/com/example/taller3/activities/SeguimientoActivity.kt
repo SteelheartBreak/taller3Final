@@ -46,6 +46,8 @@ class SeguimientoActivity : AppCompatActivity() {
     var latitudSeguir : Double = 0.0
     var longitudSeguir : Double = 0.0
 
+    var movimientoCamaraPrimeraVez = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,11 +64,10 @@ class SeguimientoActivity : AppCompatActivity() {
         // configurar el mapa
         setMap()
 
-        // mover la camara a la ubicacion actual
-        setMyLocationMarker();
+
 
         idSeguir = intent.getStringExtra("objectID").toString()
-        println("Se ha iniciado el seguimiento a: "+idSeguir)
+
 
         initParseLiveQuery()
         setupSubscription()
@@ -79,6 +80,7 @@ class SeguimientoActivity : AppCompatActivity() {
     private fun setupSubscription() {
 
         parseQuery = ParseUser.getQuery().whereEqualTo("objectId", idSeguir)
+        println("Se ha iniciado el seguimiento a: "+idSeguir)
 
         // Subscribirse a los cambios
         val subscriptionHandling = parseLiveQueryClient.subscribe(parseQuery)
@@ -174,6 +176,7 @@ class SeguimientoActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
+                    setMyLocationMarker()
                 }
             }
         }
@@ -212,6 +215,11 @@ class SeguimientoActivity : AppCompatActivity() {
         marker.title = "Mi ubicación"
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         map.overlays.add(marker)
+
+        if (!movimientoCamaraPrimeraVez){
+            movimientoCamaraPrimeraVez=true
+            moveCamera(lastLocation.latitude,lastLocation.longitude)
+        }
 
     }
 

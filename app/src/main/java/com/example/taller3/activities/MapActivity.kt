@@ -86,9 +86,6 @@ class MapActivity : AppCompatActivity() {
             toggleUserState()
         }
         checkAndUpdateButtonState()
-
-
-
     }
 
     // metodo onPause

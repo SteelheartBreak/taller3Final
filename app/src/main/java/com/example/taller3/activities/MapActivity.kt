@@ -113,6 +113,11 @@ class MapActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        binding.seguimientobtn.setOnClickListener{
+            val intent = Intent(this, SeguimientoActivity::class.java)
+            startActivity(intent)
+        }
+
 
     }
 

@@ -15,7 +15,7 @@ class SeguimientoActivity : AppCompatActivity() {
 
     lateinit var parseLiveQueryClient: ParseLiveQueryClient
     lateinit var parseQuery: ParseQuery<ParseUser>
-    lateinit var idSeguir :String
+    var idSeguir =""
     var latitudSeguir : Double = 0.0
     var longitudSeguir : Double = 0.0
 
@@ -25,7 +25,7 @@ class SeguimientoActivity : AppCompatActivity() {
         binding=ActivitySeguimientoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val idSeguir = intent.getStringExtra("objectID")
+        idSeguir = intent.getStringExtra("objectID").toString()
         println("Se ha iniciado el seguimiento a: "+idSeguir)
 
         initParseLiveQuery()

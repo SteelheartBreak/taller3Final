@@ -194,7 +194,7 @@ class SeguimientoActivity : AppCompatActivity() {
                 super.onLocationResult(result)
                 if(result!=null){
                     lastLocation = result.lastLocation!!
-                    setMyLocationMarker()
+
                 }
             }
         }
@@ -218,9 +218,11 @@ class SeguimientoActivity : AppCompatActivity() {
 
     // funcion que mueve la camara, dadas la latitud y longitud.
     fun moveCamera(latitude: Double, longitude: Double){
-        val geoPoint = GeoPoint(latitude, longitude)
-        map.controller.animateTo(geoPoint)
-        map.controller.setZoom(18.0)
+        runOnUiThread {
+            val geoPoint = GeoPoint(latitude, longitude)
+            map.controller.animateTo(geoPoint)
+            map.controller.setZoom(18.0)
+        }
     }
 
     //funcion que establece el marcador en la ubicacion actual (JAVERIANA)

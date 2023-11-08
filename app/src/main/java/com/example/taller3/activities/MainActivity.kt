@@ -53,6 +53,16 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     )
                     toast.show()
+
+                    user.put("estado","F")
+                    user.saveInBackground { e ->
+                        if (e == null) {
+                            Log.i("ACT-ESTADO","El estado se setea en false")
+                        } else {
+                            // Manejar errores, por ejemplo, mostrar un mensaje al usuario
+                        }
+                    }
+
                     val intent = Intent (this, MapActivity::class.java)
                     startActivity(intent)
                 } else {

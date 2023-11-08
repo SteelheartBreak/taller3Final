@@ -1,6 +1,9 @@
 package com.example.taller3.activities
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +12,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -16,7 +20,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.example.taller3.R
 import com.example.taller3.databinding.ActivityMapBinding
 import com.example.taller3.model.LocationG
 import com.example.taller3.model.getLugares
@@ -29,7 +35,10 @@ import com.google.android.gms.location.Priority
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import com.parse.ParseException
 import com.parse.ParseObject
+import com.parse.ParseQuery
 import com.parse.ParseUser
+import com.parse.livequery.ParseLiveQueryClient
+import com.parse.livequery.SubscriptionHandling
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -52,6 +61,9 @@ class MapActivity : AppCompatActivity() {
     lateinit var markers : List<Marker> // Lista de marcadores de los lugares
     val bundle = Bundle()
     var movimientoCamaraPrimeraVez = false
+    lateinit var parseLiveQueryClient: ParseLiveQueryClient
+    lateinit var parseQuery: ParseQuery<ParseUser>
+    private val userStates = HashMap<String, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +73,7 @@ class MapActivity : AppCompatActivity() {
         locationRequest = createLocationRequest()
         locationCallback = createLocationCallBack()
         val extras = intent.extras
+        parseLiveQueryClient = ParseLiveQueryClient.Factory.getClient()
 
         // Verificar si ya se tienen permisos. si se tienen, se inicia la actualizacion de ubicacion.
         startLocationUpdates()
@@ -87,6 +100,9 @@ class MapActivity : AppCompatActivity() {
             toggleUserState()
         }
         checkAndUpdateButtonState()
+
+        //Obtenemos los estados iniciales de los usuarios
+        fetchInitialUserStates()
     }
 
     // metodo onPause
@@ -329,6 +345,7 @@ class MapActivity : AppCompatActivity() {
         when (action) {
             "ENABLE" -> {
                 binding.disponiblebtn.text = "DISABLE"
+
             }
             "DISABLE" -> {
                 binding.disponiblebtn.text = "ENABLE"
@@ -336,6 +353,89 @@ class MapActivity : AppCompatActivity() {
                 }
        }
 
+    fun sendNotification(objectId: String) {
+        val channelId = "channel"
+        val title = "actualización"
+        val message = "Un usuario ha cambiado su visibilidad"
 
+        // Crear un NotificationManager
+        val notificationManager = baseContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        // Verificar si el dispositivo tiene Android Oreo (API 26) o superior, ya que se requieren canales de notificación
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "Canal de notificaciones", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // Crear un intent para abrir la actividad deseada al hacer clic en la notificación
+        val intent = Intent(baseContext, SeguimientoActivity::class.java)
+        intent.putExtra("objectID", objectId)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP) // Esto evita la creación de múltiples instancias de la actividad
+        val pendingIntent = PendingIntent.getActivity(baseContext, 0, intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+
+        // Crear una notificación utilizando NotificationCompat.Builder
+        val builder = NotificationCompat.Builder(baseContext, channelId)
+            .setSmallIcon(R.drawable.logo_app) // Icono de la notificación (debe existir en tu proyecto)
+            .setContentTitle(title) // Título de la notificación
+            .setContentText(message) // Contenido de la notificación
+            .setContentIntent(pendingIntent) // Asignar el intent a la notificación
+
+        // Mostrar la notificación
+        notificationManager.notify(1, builder.build()) // El valor 1 es un identificador único para la notificación
+    }
+
+    private fun setupSubscription() {
+        parseQuery = ParseUser.getQuery()
+
+        // Subscribirse a los cambios
+        val subscriptionHandling = parseLiveQueryClient.subscribe(parseQuery)
+
+        // Reaccionar a los cambios en la columna 'estado'
+        subscriptionHandling.handleEvent(SubscriptionHandling.Event.UPDATE) { _, user ->
+            user?.let {
+                val userId = it.objectId
+                val nuevoEstado = it.getString("estado") ?: ""
+                val estadoAnterior = userStates[userId] ?: "F" // Asumimos "F" como valor predeterminado si es desconocido
+
+                // Comprobar si el estado ha cambiado de "F" a "T"
+                if (estadoAnterior == "F" && nuevoEstado == "T") {
+                    // Aquí actualizas el estado en tu HashMap
+                    userStates[userId] = nuevoEstado
+
+                    // Aquí llamas a la función que maneja este cambio específico, pasando el usuario
+                    handleUserStateChange(it)
+                }
+            }
+        }
+    }
+    private fun handleUserStateChange(user: ParseUser) {
+        sendNotification(user.objectId.toString())
+        // Manejar el cambio de estado del usuario aquí
+        // Por ejemplo, actualizar la interfaz de usuario o realizar otras acciones en respuesta al cambio
+        Log.i("UserStateChange", "El usuario ${user.objectId} ha cambiado su estado a 'T'")
+    }
+    private fun fetchInitialUserStates() {
+        val query = ParseUser.getQuery()
+        query.findInBackground { users, e ->
+            if (e == null) {
+                // No hay errores, poblar el HashMap
+                for (user in users) {
+                    val userId = user.objectId
+                    val estado = user.getString("estado") ?: "F" // Asumir "F" si es nulo
+                    userStates[userId] = estado
+                }
+
+                println("Estado inicial usuarios: $userStates")
+
+                // Después de poblar el HashMap, configurar la suscripción a actualizaciones en vivo
+                setupSubscription()
+
+            } else {
+                // Manejar el error
+                Log.e("fetchInitialUserStates", "Error: " + e.message)
+            }
+        }
+    }
 
 }

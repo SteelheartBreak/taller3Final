@@ -13,8 +13,7 @@ import com.parse.ParseUser
 
 
 class ListUsersActivity : AppCompatActivity() {
-    val usernameList = mutableListOf<String>()
-    val objectID = mutableListOf<String>()
+
     val fotos = mutableListOf<String>()
     val usuarios = mutableListOf<Usuario>()
 
@@ -129,4 +128,5 @@ class ListUsersActivity : AppCompatActivity() {
                 }
             }
         }
+
 }
